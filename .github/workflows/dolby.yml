@@ -2,7 +2,7 @@ name: Dolby Cinema Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # 10분마다
+    - cron: '*/15 * * * *'  # 15분마다
   workflow_dispatch:        # 수동 실행도 가능
 
 jobs:
