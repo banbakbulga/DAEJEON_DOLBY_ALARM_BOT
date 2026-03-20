@@ -23,18 +23,6 @@
 2. 새로운 날짜의 예매가 열리면 상영 시간표와 잔여 좌석을 텔레그램으로 발송
 3. `notified.json`에 알림 보낸 날짜를 기록하여 중복 알림 방지
 
-## 설정 방법
-
-1. 이 레포를 Fork
-2. Settings → Secrets and variables → Actions에서 아래 두 개 등록
-
-| Name | Value |
-|------|-------|
-| `BOT_TOKEN` | 텔레그램 봇 토큰 |
-| `CHAT_ID` | 텔레그램 채팅 ID |
-
-3. Actions 탭에서 워크플로우 활성화
-
 ## 기술 스택
 
 - Python 3.12
