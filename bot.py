@@ -1,5 +1,7 @@
 import os
 import logging
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from branches import BRANCHES
@@ -215,10 +217,31 @@ async def check_new_dates(context: ContextTypes.DEFAULT_TYPE):
     logger.info("자동 체크 완료")
 
 
+# --- 헬스체크 서버 (Render 슬립 방지) ---
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def log_message(self, format, *args):
+        pass  # 로그 안 찍기
+
+
+def start_health_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    logger.info(f"헬스체크 서버 시작 (포트 {port})")
+
+
 # --- 메인 ---
 
 def main():
     db.init_db()
+    start_health_server()
 
     app = Application.builder().token(BOT_TOKEN).build()
 
