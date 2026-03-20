@@ -150,11 +150,4 @@
 
 ## 기술 스택
 
-- **Python 3.12** - 메인 언어
-- **python-telegram-bot** - 텔레그램 봇 프레임워크 (async/polling)
-- **aiohttp** - 비동기 HTTP 클라이언트 (메가박스 API 호출)
-- **SQLite** - 경량 DB (구독/알림 기록)
-- **Render** - 클라우드 호스팅 (무료 플랜)
-- **GitHub Actions** - Render 슬립 방지 크론 스케줄러
-- **메가박스 API** - 예매 데이터 소스 (비공식)
-- **Telegram Bot API** - 사용자 인터페이스 및 알림 발송
+![Python](https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white) ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) ![aiohttp](https://img.shields.io/badge/aiohttp-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
