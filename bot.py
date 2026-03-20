@@ -18,13 +18,19 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = ["🎬 메가박스 돌비시네마 예매 알림봇\n"]
-    lines.append("전국 돌비시네마 새 예매가 열리면 알려드려요!\n")
-    lines.append("📌 명령어")
+    lines.append("전국 돌비시네마 새 예매가 열리면 알려드려요!")
+    lines.append("사용법은 /help 를 입력해주세요.")
+    await update.message.reply_text("\n".join(lines))
+
+
+async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lines = ["📌 명령어 목록\n"]
     lines.append("  /add 극장명 - 감시 추가")
     lines.append("  /remove 극장명 - 감시 해제")
     lines.append("  /list - 내 감시 목록")
     lines.append("  /now - 현재 예매 현황 조회")
     lines.append("  /theaters - 전국 돌비시네마 목록")
+    lines.append("  /help - 명령어 목록")
     await update.message.reply_text("\n".join(lines))
 
 
@@ -246,6 +252,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("theaters", cmd_theaters))
     app.add_handler(CommandHandler("add", cmd_add))
     app.add_handler(CommandHandler("remove", cmd_remove))
