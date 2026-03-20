@@ -1,36 +1,58 @@
-# 메가박스 돌비시네마 예매 오픈 알림봇
+<div align="center">
 
-메가박스 전국 돌비시네마에 새로운 날짜의 예매가 열리면 텔레그램으로 실시간 알림을 보내주는 챗봇입니다.
+# 🎬 메가박스 돌비시네마 예매 오픈 알림봇
 
-## 주요 기능
+**전국 메가박스 돌비시네마 새 예매가 열리면 텔레그램으로 즉시 알려주는 챗봇**
 
-### 자동 예매 오픈 알림
-- 15분마다 메가박스 API를 자동으로 체크
-- 새로운 날짜의 예매가 열리면 상영 시간표 + 잔여 좌석 정보를 텔레그램으로 즉시 발송
-- 이미 알림을 보낸 날짜는 DB에 기록하여 중복 알림 방지
+![Python](https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white) ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) ![aiohttp](https://img.shields.io/badge/aiohttp-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-### 텔레그램 챗봇 명령어
+</div>
+
+---
+
+## 📌 주요 기능
+
+> **15분마다 자동 체크** | **실시간 텔레그램 알림** | **전국 8개관 지원** | **즉시 조회**
+
+- 🔔 새로운 날짜의 예매가 열리면 **상영 시간표 + 잔여 좌석** 정보를 텔레그램으로 즉시 발송
+- 🗂 이미 알림을 보낸 날짜는 DB에 기록하여 **중복 알림 방지**
+- 💬 텔레그램 챗봇으로 **극장 등록/해제, 실시간 조회** 가능
+
+---
+
+## 🤖 챗봇 명령어
+
 | 명령어 | 기능 |
-|--------|------|
+|:------:|------|
 | `/start` | 봇 소개 및 사용법 안내 |
 | `/theaters` | 전국 돌비시네마 8개관 목록 조회 |
 | `/add 극장명` | 감시 극장 등록 (예: `/add 대전`) |
 | `/remove 극장명` | 감시 극장 해제 |
 | `/list` | 내 감시 목록 확인 |
-| `/now` | 현재 예매 가능한 날짜 + 시간표 + 잔여좌석 즉시 조회 |
+| `/now` | 현재 예매 현황 즉시 조회 |
 
-### 지원 극장
-전국 메가박스 돌비시네마 8개관을 지원합니다.
-- 남양주현대아울렛스페이스원
-- 대구신세계(동대구)
-- 대전신세계아트앤사이언스
-- 송도(트리플스트리트)
-- 수원AK플라자(수원역)
-- 안성스타필드
-- 코엑스
-- 하남스타필드
+---
 
-## 알림 예시
+## 🏢 지원 극장
+
+<div align="center">
+
+| | 극장명 |
+|:---:|------|
+| 🎥 | 남양주현대아울렛스페이스원 |
+| 🎥 | 대구신세계(동대구) |
+| 🎥 | 대전신세계아트앤사이언스 |
+| 🎥 | 송도(트리플스트리트) |
+| 🎥 | 수원AK플라자(수원역) |
+| 🎥 | 안성스타필드 |
+| 🎥 | 코엑스 |
+| 🎥 | 하남스타필드 |
+
+</div>
+
+---
+
+## 💬 알림 예시
 
 ```
 🔔 돌비 예매 오픈!
@@ -49,7 +71,9 @@
 👉 https://www.megabox.co.kr
 ```
 
-## 아키텍처
+---
+
+## 🏗 아키텍처
 
 ```
 ┌─────────────────┐     5분마다 핑      ┌──────────────────────┐
@@ -79,39 +103,43 @@
                             └──────────────┘              └──────────────┘
 ```
 
-## 동작 원리
+---
 
-### 서버 시작
+## ⚙️ 동작 원리
+
+### 🟢 서버 시작
 1. Render에서 `bot.py` 실행
 2. SQLite DB 초기화 (테이블이 없으면 자동 생성)
 3. 헬스체크 서버 시작 (Render 슬립 방지용)
 4. 텔레그램 봇 시작 (polling 모드로 명령어 대기)
 5. 자동 체크 스케줄러 등록 (15분 간격)
 
-### 사용자 명령어 처리
+### 💬 사용자 명령어 처리
 1. 사용자가 텔레그램에서 명령어 입력 (예: `/add 대전`)
 2. 봇이 텔레그램 서버에서 메시지 수신 (polling)
 3. 키워드로 극장 검색 → 매칭된 극장을 DB에 저장
 4. 현재 오픈된 날짜들을 notified 테이블에 미리 기록 (기존 날짜는 알림 안 보내기)
 5. 등록 완료 응답
 
-### 자동 체크 사이클 (15분마다)
+### 🔄 자동 체크 사이클 (15분마다)
 1. DB에서 구독된 극장 목록 조회 (아무도 구독 안 했으면 체크하지 않음)
 2. 각 극장별로 메가박스 API에 오픈 날짜 조회
 3. 각 날짜별로 DB의 notified 테이블 확인
-   - 이미 알림 보낸 날짜 → 스킵
-   - 새로 열린 날짜 → 시간표 + 잔여좌석 조회 → 포맷팅
+   - ✅ 이미 알림 보낸 날짜 → 스킵
+   - 🆕 새로 열린 날짜 → 시간표 + 잔여좌석 조회 → 포맷팅
 4. 해당 극장 구독자 전원에게 텔레그램 알림 발송
 5. notified 테이블에 기록 (중복 알림 방지)
 
-### Render 슬립 방지
+### 🏓 Render 슬립 방지
 - Render 무료 플랜은 15분간 요청이 없으면 서버가 슬립 모드로 전환됨
 - GitHub Actions가 5분마다 헬스체크 엔드포인트에 HTTP 요청을 보내 서버를 깨어있게 유지
 - 봇이 24시간 상시 가동되어 자동 체크가 정상 작동
 
-## DB 구조
+---
 
-### subscriptions 테이블
+## 🗄 DB 구조
+
+### subscriptions
 사용자별 감시 극장 목록을 저장합니다.
 ```
 ┌──────────┬───────────┐
@@ -123,7 +151,7 @@
 └──────────┴───────────┘
 ```
 
-### notified 테이블
+### notified
 이미 알림을 보낸 극장/날짜 조합을 기록하여 중복 알림을 방지합니다.
 ```
 ┌───────────┬───────────┐
@@ -135,19 +163,18 @@
 └───────────┴───────────┘
 ```
 
-## 프로젝트 구조
+---
+
+## 📁 프로젝트 구조
 
 ```
-├── bot.py              # 메인 (명령어 처리 + 자동 체크 스케줄러 + 헬스체크 서버)
-├── megabox.py          # 메가박스 API 클라이언트 (날짜/시간표 조회, 포맷팅)
-├── db.py               # SQLite DB (구독 관리, 알림 기록 CRUD)
-├── branches.py         # 전국 돌비시네마 8개관 코드/이름 매핑
-├── requirements.txt    # Python 의존성
-├── Dockerfile          # 컨테이너 배포용
-└── .github/workflows/
-    └── keep-alive.yml  # Render 슬립 방지 (5분마다 핑)
+📦 DAEJEON_DOLBY_ALARM_BOT
+├── 🤖 bot.py              # 메인 (명령어 처리 + 자동 체크 스케줄러 + 헬스체크 서버)
+├── 🎬 megabox.py          # 메가박스 API 클라이언트 (날짜/시간표 조회, 포맷팅)
+├── 🗄 db.py               # SQLite DB (구독 관리, 알림 기록 CRUD)
+├── 🏢 branches.py         # 전국 돌비시네마 8개관 코드/이름 매핑
+├── 📋 requirements.txt    # Python 의존성
+├── 🐳 Dockerfile          # 컨테이너 배포용
+└── ⚡ .github/workflows/
+    └── keep-alive.yml     # Render 슬립 방지 (5분마다 핑)
 ```
-
-## 기술 스택
-
-![Python](https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white) ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) ![aiohttp](https://img.shields.io/badge/aiohttp-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
