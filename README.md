@@ -1,0 +1,43 @@
+# 대전신세계 돌비시네마 예매 오픈 알림봇
+
+메가박스 대전신세계아트앤사이언스 돌비시네마에 새로운 날짜 예매가 열리면 텔레그램으로 알림을 보내주는 봇입니다.
+
+## 알림 예시
+
+```
+🔔 돌비 예매 오픈!
+
+[대전신세계 돌비시네마] 3월 25일(수)
+
+프로젝트 헤일메리(DOLBY CINEMA [Laser])
+  09:30~12:16 313/313석
+  12:40~15:26 313/313석
+  18:50~21:36 313/313석
+
+👉 https://www.megabox.co.kr
+```
+
+## 동작 방식
+
+1. GitHub Actions가 15분마다 메가박스 API를 체크
+2. 새로운 날짜의 예매가 열리면 상영 시간표와 잔여 좌석을 텔레그램으로 발송
+3. `notified.json`에 알림 보낸 날짜를 기록하여 중복 알림 방지
+
+## 설정 방법
+
+1. 이 레포를 Fork
+2. Settings → Secrets and variables → Actions에서 아래 두 개 등록
+
+| Name | Value |
+|------|-------|
+| `BOT_TOKEN` | 텔레그램 봇 토큰 |
+| `CHAT_ID` | 텔레그램 채팅 ID |
+
+3. Actions 탭에서 워크플로우 활성화
+
+## 기술 스택
+
+- Python 3.12
+- 메가박스 API
+- Telegram Bot API
+- GitHub Actions (cron schedule)
