@@ -12,22 +12,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+CHAT_ID = os.environ.get("CHAT_ID", "")
+
+# 감시 대상 (대전신세계아트앤사이언스)
+WATCH_BRANCH = "0028"
 
 
 # --- 명령어 핸들러 ---
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    lines = ["🎬 메가박스 돌비시네마 예매 알림봇\n"]
-    lines.append("전국 돌비시네마 새 예매가 열리면 알려드려요!")
-    lines.append("사용법은 /help 를 입력해주세요.")
+    lines = ["🎬 대전신세계 돌비시네마 예매 오픈 알림봇\n"]
+    lines.append("대전신세계아트앤사이언스 돌비시네마에")
+    lines.append("새 예매가 열리면 자동으로 알려드려요!")
+    lines.append("\n사용법은 /help 를 입력해주세요.")
     await update.message.reply_text("\n".join(lines))
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = ["📌 명령어 목록\n"]
-    lines.append("  /add 극장명 - 감시 추가")
-    lines.append("  /remove 극장명 - 감시 해제")
-    lines.append("  /list - 내 감시 목록")
     lines.append("  /now - 현재 예매 현황 조회")
     lines.append("  /theaters - 전국 돌비시네마 목록")
     lines.append("  /help - 명령어 목록")
@@ -38,7 +40,6 @@ async def cmd_theaters(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = ["🏢 전국 돌비시네마 목록\n"]
     for code, name in BRANCHES.items():
         lines.append(f"  {name}")
-    lines.append("\n/add 극장명 으로 등록하세요.")
     await update.message.reply_text("\n".join(lines))
 
 
@@ -51,90 +52,7 @@ def find_branch(keyword):
     return matches
 
 
-async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("사용법: /add 극장명\n예: /add 대전")
-        return
-
-    keyword = " ".join(context.args)
-    matches = find_branch(keyword)
-
-    if not matches:
-        await update.message.reply_text(f"'{keyword}'에 해당하는 극장을 찾을 수 없어요.\n/theaters 로 목록을 확인해보세요.")
-        return
-
-    if len(matches) > 1:
-        lines = [f"'{keyword}' 검색 결과가 여러 개예요:\n"]
-        for code, name in matches:
-            lines.append(f"  {name}")
-        lines.append("\n좀 더 정확하게 입력해주세요.")
-        await update.message.reply_text("\n".join(lines))
-        return
-
-    code, name = matches[0]
-    chat_id = update.effective_chat.id
-    db.add_subscription(chat_id, code)
-
-    # 현재 오픈된 날짜들 미리 notified 처리 (기존 날짜는 알림 안 보내기)
-    try:
-        existing_dates = await fetch_open_dates(code)
-        for d in existing_dates:
-            db.mark_notified(code, d)
-    except Exception:
-        pass
-
-    await update.message.reply_text(f"✅ {name} 감시 등록 완료!\n새 예매가 열리면 알려드릴게요.")
-
-
-async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("사용법: /remove 극장명\n예: /remove 대전")
-        return
-
-    keyword = " ".join(context.args)
-    matches = find_branch(keyword)
-
-    if not matches:
-        await update.message.reply_text(f"'{keyword}'에 해당하는 극장을 찾을 수 없어요.")
-        return
-
-    if len(matches) > 1:
-        lines = [f"'{keyword}' 검색 결과가 여러 개예요:\n"]
-        for code, name in matches:
-            lines.append(f"  {name}")
-        lines.append("\n좀 더 정확하게 입력해주세요.")
-        await update.message.reply_text("\n".join(lines))
-        return
-
-    code, name = matches[0]
-    chat_id = update.effective_chat.id
-    removed = db.remove_subscription(chat_id, code)
-
-    if removed:
-        await update.message.reply_text(f"🗑 {name} 감시 해제했어요.")
-    else:
-        await update.message.reply_text(f"{name}은(는) 감시 목록에 없어요.")
-
-
-async def cmd_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    branches = db.get_user_branches(chat_id)
-
-    if not branches:
-        await update.message.reply_text("감시 중인 극장이 없어요.\n/add 극장명 으로 등록해보세요.")
-        return
-
-    lines = ["📋 내 감시 목록\n"]
-    for code in branches:
-        name = BRANCHES.get(code, code)
-        lines.append(f"  {name}")
-    await update.message.reply_text("\n".join(lines))
-
-
 async def cmd_now(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-
-    # 인자가 있으면 특정 극장, 없으면 내 구독 목록 전체
     if context.args:
         keyword = " ".join(context.args)
         matches = find_branch(keyword)
@@ -149,10 +67,7 @@ async def cmd_now(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         branch_list = [matches[0][0]]
     else:
-        branch_list = db.get_user_branches(chat_id)
-        if not branch_list:
-            await update.message.reply_text("감시 중인 극장이 없어요.\n/now 극장명 으로 직접 조회하거나\n/add 로 등록해보세요.")
-            return
+        branch_list = [WATCH_BRANCH]
 
     await update.message.reply_text("🔍 조회 중...")
 
@@ -175,7 +90,6 @@ async def cmd_now(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if results:
         msg = "\n\n".join(results)
-        # 텔레그램 메시지 길이 제한 (4096자)
         if len(msg) > 4000:
             for i in range(0, len(msg), 4000):
                 await update.message.reply_text(msg[i:i+4000])
@@ -185,42 +99,51 @@ async def cmd_now(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("조회 결과가 없어요.")
 
 
-# --- 자동 체크 (15분마다) ---
+# --- 자동 체크 (5분마다) ---
 
 async def check_new_dates(context: ContextTypes.DEFAULT_TYPE):
     logger.info("자동 체크 시작")
-    branches = db.get_all_monitored_branches()
 
-    for branch_no in branches:
-        try:
-            current_dates = await fetch_open_dates(branch_no)
+    try:
+        current_dates = await fetch_open_dates(WATCH_BRANCH)
 
-            for d in current_dates:
-                if db.is_notified(branch_no, d):
-                    continue
+        for d in current_dates:
+            if db.is_notified(WATCH_BRANCH, d):
+                continue
 
-                showtimes = await fetch_showtimes(branch_no, d)
-                if not showtimes:
-                    continue
+            showtimes = await fetch_showtimes(WATCH_BRANCH, d)
+            if not showtimes:
+                continue
 
-                label = date_label(d)
-                result = format_showtimes(branch_no, showtimes, label)
-                msg = f"🔔 돌비 예매 오픈!\n\n{result}\n\n👉 https://www.megabox.co.kr"
+            label = date_label(d)
+            result = format_showtimes(WATCH_BRANCH, showtimes, label)
+            msg = f"🔔 돌비 예매 오픈!\n\n{result}\n\n👉 https://www.megabox.co.kr"
 
-                subscribers = db.get_subscribers_for_branch(branch_no)
-                for chat_id in subscribers:
-                    try:
-                        await context.bot.send_message(chat_id=chat_id, text=msg)
-                    except Exception as e:
-                        logger.error(f"메시지 발송 실패 (chat_id={chat_id}): {e}")
+            try:
+                await context.bot.send_message(chat_id=CHAT_ID, text=msg)
+            except Exception as e:
+                logger.error(f"메시지 발송 실패: {e}")
 
-                db.mark_notified(branch_no, d)
-                logger.info(f"알림 발송: {BRANCHES.get(branch_no)} {label} → {len(subscribers)}명")
+            db.mark_notified(WATCH_BRANCH, d)
+            logger.info(f"알림 발송: {BRANCHES.get(WATCH_BRANCH)} {label}")
 
-        except Exception as e:
-            logger.error(f"체크 실패 ({branch_no}): {e}")
+    except Exception as e:
+        logger.error(f"체크 실패: {e}")
 
     logger.info("자동 체크 완료")
+
+
+# --- 시작 시 기존 날짜 notified 처리 ---
+
+async def init_notified(app: Application):
+    """서버 재시작 시 이미 오픈된 날짜는 알림 안 보내도록 처리"""
+    try:
+        existing_dates = await fetch_open_dates(WATCH_BRANCH)
+        for d in existing_dates:
+            db.mark_notified(WATCH_BRANCH, d)
+        logger.info(f"기존 오픈 날짜 {len(existing_dates)}개 등록")
+    except Exception as e:
+        logger.error(f"초기화 실패: {e}")
 
 
 # --- 헬스체크 서버 (Render 슬립 방지) ---
@@ -232,7 +155,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.wfile.write(b"OK")
 
     def log_message(self, format, *args):
-        pass  # 로그 안 찍기
+        pass
 
 
 def start_health_server():
@@ -254,13 +177,13 @@ def main():
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("theaters", cmd_theaters))
-    app.add_handler(CommandHandler("add", cmd_add))
-    app.add_handler(CommandHandler("remove", cmd_remove))
-    app.add_handler(CommandHandler("list", cmd_list))
     app.add_handler(CommandHandler("now", cmd_now))
 
-    # 15분(900초)마다 자동 체크
-    app.job_queue.run_repeating(check_new_dates, interval=900, first=10)
+    # 시작 시 기존 날짜 처리 (재시작 후 중복 알림 방지)
+    app.post_init = init_notified
+
+    # 5분(300초)마다 자동 체크
+    app.job_queue.run_repeating(check_new_dates, interval=300, first=10)
 
     logger.info("봇 시작!")
     app.run_polling()
