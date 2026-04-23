@@ -6,7 +6,6 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from branches import BRANCHES
 from megabox import fetch_open_dates, fetch_showtimes, format_showtimes, date_label
-import db
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -16,6 +15,9 @@ CHAT_ID = os.environ.get("CHAT_ID", "")
 
 # 감시 대상 (대전신세계아트앤사이언스)
 WATCH_BRANCH = "0028"
+
+# 알림 완료된 날짜 (메모리)
+notified_dates = set()
 
 
 # --- 명령어 핸들러 ---
@@ -108,7 +110,7 @@ async def check_new_dates(context: ContextTypes.DEFAULT_TYPE):
         current_dates = await fetch_open_dates(WATCH_BRANCH)
 
         for d in current_dates:
-            if db.is_notified(WATCH_BRANCH, d):
+            if d in notified_dates:
                 continue
 
             showtimes = await fetch_showtimes(WATCH_BRANCH, d)
@@ -124,7 +126,7 @@ async def check_new_dates(context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logger.error(f"메시지 발송 실패: {e}")
 
-            db.mark_notified(WATCH_BRANCH, d)
+            notified_dates.add(d)
             logger.info(f"알림 발송: {BRANCHES.get(WATCH_BRANCH)} {label}")
 
     except Exception as e:
@@ -133,14 +135,13 @@ async def check_new_dates(context: ContextTypes.DEFAULT_TYPE):
     logger.info("자동 체크 완료")
 
 
-# --- 시작 시 기존 날짜 notified 처리 ---
+# --- 시작 시 기존 날짜 등록 ---
 
 async def init_notified(app: Application):
     """서버 재시작 시 이미 오픈된 날짜는 알림 안 보내도록 처리"""
     try:
         existing_dates = await fetch_open_dates(WATCH_BRANCH)
-        for d in existing_dates:
-            db.mark_notified(WATCH_BRANCH, d)
+        notified_dates.update(existing_dates)
         logger.info(f"기존 오픈 날짜 {len(existing_dates)}개 등록")
     except Exception as e:
         logger.error(f"초기화 실패: {e}")
@@ -169,7 +170,6 @@ def start_health_server():
 # --- 메인 ---
 
 def main():
-    db.init_db()
     start_health_server()
 
     app = Application.builder().token(BOT_TOKEN).build()
